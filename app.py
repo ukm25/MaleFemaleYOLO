@@ -146,8 +146,12 @@ def index():
     """
 
 if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5001))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    
     print("🚀 Starting Flask API server...")
-    print("📡 API will be available at: http://localhost:5001")
+    print(f"📡 API will be available at: http://0.0.0.0:{port}")
     print("🎯 Ready to receive images for gender and age detection!")
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug)
