@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gender & Age Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .left-panel {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .webcam-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        #webcam {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            aspect-ratio: 4/3;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .detection-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .right-panel h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .detection-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .container {
+                max-width: 100%;
+                padding: 10px;
+            }
+            
+            #webcam {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Gender & Age Detection</h1>
+        
+        <div class="main-layout">
+            <!-- Left Panel: Camera & Controls -->
+            <div class="left-panel">
+                <div class="webcam-container">
+                    <video id="webcam" autoplay muted></video>
+                </div>
+                
+                <div class="controls">
+                    <button id="startBtn">Start Detection</button>
+                    <button id="stopBtn" disabled>Stop Detection</button>
+                </div>
+                
+                <div id="status" class="status info">
+                    Click "Start Detection" to begin auto-capturing every 2 seconds
+                </div>
+            </div>
+            
+            <!-- Right Panel: Detection Results -->
+            <div class="right-panel">
+                <div id="detectionResults" class="detection-info" style="display: none;">
+                    <h3>Latest Detection Results:</h3>
+                    <div id="detectionContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class GenderAgeDetector {
+            constructor() {
+                this.video = document.getElementById('webcam');
+                this.startBtn = document.getElementById('startBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.status = document.getElementById('status');
+                this.detectionResults = document.getElementById('detectionResults');
+                this.detectionContent = document.getElementById('detectionContent');
+                
+                this.isRunning = false;
+                this.captureInterval = null;
+                this.apiUrl = 'http://localhost:5001/api/detect';
+                
+                this.setupEventListeners();
+                this.initWebcam();
+            }
+            
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startDetection());
+                this.stopBtn.addEventListener('click', () => this.stopDetection());
+            }
+            
+            async initWebcam() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 640, height: 480 } 
+                    });
+                    this.video.srcObject = stream;
+                    this.updateStatus('Webcam initialized successfully!', 'success');
+                } catch (error) {
+                    console.error('Error accessing webcam:', error);
+                    this.updateStatus('Error accessing webcam: ' + error.message, 'error');
+                }
+            }
+            
+            startDetection() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.startBtn.disabled = true;
+                this.stopBtn.disabled = false;
+                
+                this.updateStatus('Detection started! Capturing every 2 seconds...', 'info');
+                
+                // Start capturing every 2 seconds
+                this.captureInterval = setInterval(() => {
+                    this.captureAndDetect();
+                }, 2000);
+                
+                // Capture immediately
+                this.captureAndDetect();
+            }
+            
+            stopDetection() {
+                if (!this.isRunning) return;
+                
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.stopBtn.disabled = true;
+                
+                if (this.captureInterval) {
+                    clearInterval(this.captureInterval);
+                    this.captureInterval = null;
+                }
+                
+                this.updateStatus('Detection stopped.', 'info');
+            }
+            
+            captureAndDetect() {
+                try {
+                    // Create canvas to capture frame
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = this.video.videoWidth;
+                    canvas.height = this.video.videoHeight;
+                    
+                    // Draw current video frame to canvas
+                    ctx.drawImage(this.video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convert to base64
+                    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // Send to server
+                    this.sendToServer(imageData);
+                    
+                } catch (error) {
+                    console.error('Error capturing frame:', error);
+                    this.updateStatus('Error capturing frame: ' + error.message, 'error');
+                }
+            }
+            
+            async sendToServer(imageData) {
+                try {
+                    const response = await fetch(this.apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            image: imageData
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.displayResults(result);
+                        console.log('Detection Results:', result);
+                    } else {
+                        console.error('Detection failed:', result.error);
+                        this.updateStatus('Detection failed: ' + result.error, 'error');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error sending to server:', error);
+                    this.updateStatus('Error connecting to server: ' + error.message, 'error');
+                }
+            }
+            
+            displayResults(result) {
+                const detections = result.detections;
+                const processingTime = result.processing_time;
+                
+                if (detections.length === 0) {
+                    this.detectionContent.innerHTML = '<p>No people detected in the image.</p>';
+                } else {
+                    let html = `<p><strong>Processing Time:</strong> ${processingTime}s</p>`;
+                    html += `<p><strong>People Detected:</strong> ${detections.length}</p>`;
+                    
+                    detections.forEach((detection, index) => {
+                        html += `
+                            <div class="detection-item">
+                                <h4>Person ${index + 1}</h4>
+                                <p><strong>Gender:</strong> ${detection.gender} (${(detection.gender_confidence * 100).toFixed(1)}%)</p>
+                                <p><strong>Age:</strong> ${detection.age} years old</p>
+                                <p><strong>Race:</strong> ${detection.race} (${(detection.race_confidence * 100).toFixed(1)}%)</p>
+                                <p><strong>Emotion:</strong> ${detection.emotion} (${(detection.emotion_confidence * 100).toFixed(1)}%)</p>
+                                <p><strong>Detection Confidence:</strong> ${(detection.detection_confidence * 100).toFixed(1)}%</p>
+                            </div>
+                        `;
+                    });
+                    
+                    this.detectionContent.innerHTML = html;
+                }
+                
+                this.detectionResults.style.display = 'block';
+                this.updateStatus(`Detection completed in ${processingTime}s`, 'success');
+            }
+            
+            updateStatus(message, type) {
+                this.status.textContent = message;
+                this.status.className = `status ${type}`;
+            }
+        }
+        
+        // Initialize the detector when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new GenderAgeDetector();
+        });
+    </script>
+</body>
+</html>
