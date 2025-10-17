@@ -19,7 +19,7 @@ CORS(app)  # Enable CORS for frontend
 # Initialize models
 print("🎯 Initializing models...")
 detector = YOLODetector(model_path="yolov8n.pt")  # Use nano for speed
-gender_classifier = GenderClassifier(model_name='Facenet')  # Use Facenet for lower memory
+gender_classifier = GenderClassifier(model_name='OpenFace')  # Use OpenFace for lowest memory
 print("✅ Models loaded successfully!")
 
 def decode_base64_image(base64_string):
