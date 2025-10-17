@@ -1,186 +1,199 @@
-# Real-time Gender Detection System
+# 🎯 Gender & Age Detection Web App
 
-A Python application that uses YOLOv8 for person detection and DeepFace for gender classification to provide real-time gender detection from webcam feed.
+A real-time web application that automatically captures webcam images and detects gender, age, race, and emotion using YOLO + DeepFace.
 
-## Features
+## 🚀 Features
 
-- **Real-time Person Detection**: Uses YOLOv8 (nano/small/medium models) for fast and accurate person detection
-- **Gender Classification**: Classifies each detected person's gender (Male/Female) using DeepFace
-- **Live Webcam Feed**: Real-time processing with bounding boxes and gender labels
-- **Performance Monitoring**: FPS counter and performance optimization
-- **Modular Design**: Separate modules for detection, classification, and main application
-- **Configurable Parameters**: Adjustable confidence thresholds and model sizes
+- **Real-time Webcam**: Continuous webcam feed with horizontal layout
+- **Auto Capture**: Automatically captures images every 2 seconds
+- **AI Detection**: Uses YOLOv8n + DeepFace for accurate analysis
+- **Multiple Attributes**: Detects gender, age, race, and emotion
+- **Responsive Design**: Works on desktop and mobile devices
+- **Flask API**: RESTful API for image processing
+- **Console Logging**: Results displayed in browser console
 
-## Requirements
-
-- Python 3.8 or higher
-- Webcam or camera device
-- Minimum 4GB RAM (8GB recommended for better performance)
-- GPU support recommended (but not required)
-
-## Installation
-
-1. **Clone or download the project files**
-
-2. **Install required dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Verify installation**:
-   ```bash
-   python -c "import cv2, ultralytics, deepface; print('All dependencies installed successfully!')"
-   ```
-
-## Usage
-
-### Basic Usage
-
-Run the application with default settings:
-```bash
-python main.py
-```
-
-### Advanced Usage
-
-```bash
-# Use YOLOv8 small model for better accuracy
-python main.py --model-size s
-
-# Use fast classifier instead of DeepFace (faster but less accurate)
-python main.py --fast-classifier
-
-# Adjust detection confidence threshold
-python main.py --confidence 0.6
-
-# Adjust gender classification confidence threshold
-python main.py --gender-confidence 0.7
-
-# Use different camera device
-python main.py --camera 1
-```
-
-### Command Line Arguments
-
-- `--model-size`: YOLO model size ('n'=nano, 's'=small, 'm'=medium)
-- `--fast-classifier`: Use fast classifier instead of DeepFace
-- `--confidence`: YOLO detection confidence threshold (0.0-1.0)
-- `--gender-confidence`: Gender classification confidence threshold (0.0-1.0)
-- `--camera`: Camera device ID (default: 0)
-
-### Controls
-
-While the application is running:
-- **'q'**: Quit the application
-- **'r'**: Reset detections
-- **'s'**: Save current frame as image
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 MaleFemaleYOLO/
-├── main.py                 # Main application
-├── yolo_detector.py        # YOLO person detection module
-├── gender_classifier.py    # Gender classification module
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+├── app.py                 # Flask API server
+├── index.html            # Web UI with horizontal layout
+├── yolo_detector.py      # YOLO person detection
+├── gender_classifier.py  # DeepFace analysis
+├── main.py              # YOLOv8n + DeepFace combo
+├── main_yolov8s.py      # YOLOv8s + DeepFace combo
+├── requirements.txt     # Python dependencies
+├── README.md           # This file
+├── README_WEB.md       # Web app documentation
+├── yolov8n.pt         # YOLO nano model (6MB)
+└── yolov8s.pt         # YOLO small model (22MB)
 ```
 
-## Module Details
+## 🛠️ Installation
 
-### yolo_detector.py
-- **YOLOPersonDetector**: Handles YOLOv8 model loading and person detection
-- **Key Methods**:
-  - `detect_persons()`: Detect people in frames
-  - `crop_person()`: Extract person regions
-  - `draw_detections()`: Draw bounding boxes and labels
+### 1. Clone Repository
+```bash
+git clone https://github.com/ukm25/MaleFemaleYOLO.git
+cd MaleFemaleYOLO
+```
 
-### gender_classifier.py
-- **GenderClassifier**: DeepFace-based gender classification
-- **FastGenderClassifier**: Lightweight alternative for better performance
-- **Key Methods**:
-  - `classify_gender()`: Classify gender from person image
-  - `classify_multiple_persons()`: Batch gender classification
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-### main.py
-- **RealTimeGenderDetector**: Main application class
-- **Features**:
-  - Real-time processing pipeline
-  - Performance monitoring
-  - User interface controls
-  - Error handling and cleanup
+### 3. Start API Server
+```bash
+python app.py
+```
+The API will be available at: `http://localhost:5001`
 
-## Performance Optimization
+### 4. Open Web UI
+Open `index.html` in your browser or serve it locally:
+```bash
+python -m http.server 8000
+```
+Then open: `http://localhost:8000`
 
-### For Better Speed:
-1. Use YOLOv8n (nano) model: `--model-size n`
-2. Use fast classifier: `--fast-classifier`
-3. Increase confidence thresholds to reduce false positives
-4. Ensure good lighting conditions
-5. Use GPU acceleration if available
+## 🎮 Usage
 
-### For Better Accuracy:
-1. Use YOLOv8s (small) or YOLOv8m (medium) model
-2. Use DeepFace classifier (default)
-3. Lower confidence thresholds for more detections
-4. Ensure clear, well-lit images
+1. **Open the Web UI** in your browser
+2. **Allow webcam access** when prompted
+3. **Click "Start Detection"** to begin auto-capturing
+4. **View results** in the UI and browser console
+5. **Click "Stop Detection"** to stop
 
-## Troubleshooting
+## 📊 API Endpoints
 
-### Common Issues:
+### POST /api/detect
+Detects gender, age, race, and emotion from an image.
 
-1. **Camera not found**:
-   - Check if camera is connected and not used by other applications
-   - Try different camera ID: `--camera 1`
+**Request:**
+```json
+{
+  "image": "base64_encoded_image"
+}
+```
 
-2. **Low FPS performance**:
-   - Use YOLOv8n model: `--model-size n`
-   - Use fast classifier: `--fast-classifier`
-   - Close other applications using the camera
+**Response:**
+```json
+{
+  "success": true,
+  "detections": [
+    {
+      "gender": "Nữ",
+      "gender_confidence": 0.85,
+      "age": 25,
+      "race": "Châu Á",
+      "race_confidence": 0.78,
+      "emotion": "Vui vẻ",
+      "emotion_confidence": 0.92,
+      "bbox": [100, 50, 200, 300],
+      "detection_confidence": 0.95
+    }
+  ],
+  "processing_time": 0.15,
+  "timestamp": 1697123456.789
+}
+```
 
-3. **DeepFace installation issues**:
-   - Install TensorFlow: `pip install tensorflow`
-   - Use fast classifier as alternative: `--fast-classifier`
+### GET /api/health
+Health check endpoint.
 
-4. **YOLO model download issues**:
-   - Ensure internet connection for first-time model download
-   - Models are cached locally after first download
+## ⚡ Performance
 
-### Performance Tips:
+- **Capture Interval**: 2 seconds
+- **Processing Time**: ~100-200ms per image
+- **Model**: YOLOv8n (fast) + DeepFace (accurate)
+- **Image Size**: 640x480 pixels
+- **Compression**: JPEG 80% quality
 
-- **Minimum 10-15 FPS**: Use YOLOv8n with fast classifier
-- **Good accuracy**: Use YOLOv8s with DeepFace
-- **Best performance**: Ensure good lighting and clear camera view
+## 🎨 UI Layout
 
-## Technical Details
+The application features a horizontal layout:
+- **Left Panel**: Webcam feed and controls
+- **Right Panel**: Detection results
+- **Responsive**: Automatically adjusts for mobile devices
 
-### YOLOv8 Models:
-- **YOLOv8n**: Fastest, ~6MB, good for real-time
-- **YOLOv8s**: Balanced, ~22MB, better accuracy
-- **YOLOv8m**: Most accurate, ~50MB, slower
+## 🔧 Configuration
 
-### Gender Classification:
-- **DeepFace**: Uses VGG-Face model, high accuracy
-- **Fast Classifier**: Heuristic-based, very fast
+### Change Capture Interval
+Edit the interval in `index.html`:
+```javascript
+// Change from 2000ms (2s) to 3000ms (3s)
+this.captureInterval = setInterval(() => {
+    this.captureAndDetect();
+}, 3000);
+```
 
-### Detection Pipeline:
-1. Capture frame from webcam
-2. Run YOLO inference for person detection
-3. Crop detected person regions
-4. Classify gender for each person
-5. Draw bounding boxes and labels
-6. Display processed frame
+### Change Model
+Edit the model in `app.py`:
+```python
+# Change from yolov8n.pt to yolov8s.pt for better accuracy
+detector = YOLODetector(model_path="yolov8s.pt")
+```
 
-## License
+## 🐛 Troubleshooting
 
-This project is open source and available under the MIT License.
+### Webcam Not Working
+- Ensure browser has camera permissions
+- Try refreshing the page
+- Check if another application is using the camera
 
-## Contributing
+### API Connection Error
+- Ensure Flask server is running on port 5001
+- Check browser console for CORS errors
+- Verify `flask-cors` is installed
 
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+### Slow Processing
+- Reduce image quality in `index.html`
+- Use YOLOv8n instead of YOLOv8s
+- Increase capture interval
 
-## Acknowledgments
+## 🎯 Use Cases
 
-- [Ultralytics](https://github.com/ultralytics/ultralytics) for YOLOv8
-- [DeepFace](https://github.com/serengil/deepface) for gender classification
-- [OpenCV](https://opencv.org/) for computer vision utilities
+- **Security Systems**: Real-time person monitoring
+- **Retail Analytics**: Customer demographic analysis
+- **Healthcare**: Patient monitoring and analysis
+- **Education**: Student engagement tracking
+- **Research**: Human behavior studies
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+python app.py
+```
+
+### Production Deployment
+- **Heroku**: Use Procfile and requirements.txt
+- **Railway**: Direct deployment from GitHub
+- **AWS**: EC2 with Docker container
+- **Google Cloud**: App Engine or Cloud Run
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📞 Support
+
+For support, email quang251199@gmail.com or create an issue on GitHub.
+
+## 🎉 Acknowledgments
+
+- **YOLOv8**: Ultralytics for object detection
+- **DeepFace**: Serengil for facial analysis
+- **Flask**: Web framework
+- **OpenCV**: Computer vision library
+
+---
+
+**Made with ❤️ by ukm25**
