@@ -145,6 +145,7 @@ def index():
     </ul>
     """
 
+# For Vercel deployment
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5001))
@@ -155,3 +156,7 @@ if __name__ == '__main__':
     print("🎯 Ready to receive images for gender and age detection!")
     
     app.run(host='0.0.0.0', port=port, debug=debug)
+
+# For Vercel serverless functions
+def handler(request):
+    return app(request.environ, start_response)
