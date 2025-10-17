@@ -6,12 +6,7 @@ Simple web API that receives images and returns detection results
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import cv2
-import numpy as np
-import base64
 import time
-from yolo_detector import YOLODetector
-from gender_classifier import GenderClassifier
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
@@ -22,29 +17,9 @@ print("🎯 Initializing models...")
 # gender_classifier = GenderClassifier(model_name='OpenFace')  # Use OpenFace for lowest memory
 print("✅ Models loaded successfully!")
 
-def decode_base64_image(base64_string):
-    """Decode base64 image string to OpenCV format"""
-    try:
-        # Remove data URL prefix if present
-        if ',' in base64_string:
-            base64_string = base64_string.split(',')[1]
-        
-        # Decode base64
-        image_data = base64.b64decode(base64_string)
-        
-        # Convert to numpy array
-        nparr = np.frombuffer(image_data, np.uint8)
-        
-        # Decode image
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        return image
-    except Exception as e:
-        print(f"Error decoding image: {e}")
-        return None
 
-def process_image(image):
-    """Process image with YOLO + DeepFace"""
+def process_image(image_data):
+    """Process image with mock data"""
     try:
         start_time = time.time()
         
@@ -89,17 +64,8 @@ def detect_gender_age():
                 'error': 'No image provided'
             }), 400
         
-        # Decode image
-        image = decode_base64_image(data['image'])
-        
-        if image is None:
-            return jsonify({
-                'success': False,
-                'error': 'Invalid image format'
-            }), 400
-        
-        # Process image
-        result = process_image(image)
+        # Process image (mock data)
+        result = process_image(data['image'])
         
         return jsonify(result)
         
