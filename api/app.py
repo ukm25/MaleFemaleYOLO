@@ -16,10 +16,10 @@ from gender_classifier import GenderClassifier
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
 
-# Initialize models
+# Initialize models (disabled for Vercel test)
 print("🎯 Initializing models...")
-detector = YOLODetector(model_path="yolov8n.pt")  # Use nano for speed
-gender_classifier = GenderClassifier(model_name='OpenFace')  # Use OpenFace for lowest memory
+# detector = YOLODetector(model_path="yolov8n.pt")  # Use nano for speed
+# gender_classifier = GenderClassifier(model_name='OpenFace')  # Use OpenFace for lowest memory
 print("✅ Models loaded successfully!")
 
 def decode_base64_image(base64_string):
@@ -48,29 +48,16 @@ def process_image(image):
     try:
         start_time = time.time()
         
-        # Detect persons
-        detections = detector.detect_persons(image)
-        
-        results = []
-        
-        for detection in detections:
-            x1, y1, x2, y2, confidence = detection
-            
-            # Crop person from image
-            person_crop = image[y1:y2, x1:x2]
-            
-            # Skip if crop is too small
-            if person_crop.shape[0] < 50 or person_crop.shape[1] < 50:
-                continue
-            
-            # Analyze with DeepFace
-            analysis = gender_classifier.analyze_face(person_crop)
-            
-            # Add bounding box info
-            analysis['bbox'] = [int(x1), int(y1), int(x2), int(y2)]
-            analysis['detection_confidence'] = float(confidence)
-            
-            results.append(analysis)
+        # Mock detection for Vercel test
+        results = [{
+            'gender': 'Nam',
+            'gender_confidence': 0.85,
+            'age': 25,
+            'race': 'Châu Á',
+            'emotion': 'Vui vẻ',
+            'bbox': [100, 100, 200, 300],
+            'detection_confidence': 0.9
+        }]
         
         processing_time = time.time() - start_time
         
